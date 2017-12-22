@@ -1,0 +1,164 @@
+#+TITLE: ob-clojure-literate
+
+* Screenshots
+
+** use default session
+
+#+begin_src org
+,#+begin_src clojure :session "*cider-repl ob-clojure*" :results output
+(prn *ns*)
+,#+end_src
+
+,#+RESULTS:
+: #namespace[user]
+#+end_src
+
+** support generate plot
+
+** support header argument :dir
+
+
+* Installation
+
+** use-package
+
+#+begin_src emacs-lisp
+(use-package ob-clojure-literate
+  :ensure t)
+#+end_src
+
+
+* Motivation
+
+I like Emacs Org-mode "Literate Programming" very much. It's a kind of paradigm.
+I can apply this idea on many places. Now Clojure is my favourite programming
+language. I hope to combine them together. But ~ob-clojure~ does not suitable for
+Literate Programming very much like other language babel (like Python) supports.
+
+_This README is totally written in Org-mode Literate Programming._
+
+So I decide to solve this problem in my way.
+
+
+* Todos
+
+** TODO Support generate inline plot image under current working directory
+:LOGBOOK:
+- State "TODO"       from              [2017-12-22 Fri 09:52]
+:END:
+
+** TODO Support babel header argument :dir
+:LOGBOOK:
+- State "TODO"       from              [2017-12-22 Fri 09:52]
+:END:
+
+
+* Usage
+
+** This package workflow
+
+*** auto start an CIDER REPL for ob-clojure
+
+1. First, create a plain Clojure project with Leiningen to used for ob-clojure.
+
+   #+begin_src shell :dir "~/.emacs.d/Org-mode/"
+   lein new ob-clojure
+   #+end_src
+
+2. Then auto start CIDER REPL session in this plain Clojure project.
+
+   1. Set ob-clojure default header arguments to a static session name:
+
+      #+begin_src emacs-lisp
+      (add-to-list 'org-babel-default-header-args:clojure
+                   '(:session . "*cider-repl ob-clojure*"))
+      #+end_src
+
+   2. open a file in project to prepare for CIDER jack-in.
+
+      #+begin_src emacs-lisp
+      (progn
+        (find-file (expand-file-name "~/.emacs.d/Org-mode/ob-clojure/src/ob_clojure/core.clj"))
+        (cider-jack-in))
+      #+end_src
+
+3. To fix ~org-babel-execute:clojure~ has a line ~(cider-current-ns)~ which will
+   invoke ~(cider-find-ns)~. The ~(cider-find-ns)~ will try to extract Clojure
+   namespace from current buffer.
+
+   This will cause a problem, like in following org-mode file content:
+
+   #+begin_src org
+   ,* test results output
+
+   ,#+BEGIN_SRC clojure :result output
+   (println "hi")
+   (println (str *ns*))
+   ,#+END_SRC
+
+   When I execute first src block [C-c C-c], it will find namespace and
+   return wrong namespace ~kk~ in second src block. This is not a
+   expected behavior.
+
+   ,* different namespace
+
+   ,#+BEGIN_SRC clojure :result output
+   (in-ns 'kk)
+   (println (str *ns*))
+   ,#+END_SRC
+   #+end_src
+
+   In order to fix this problem, I asked a lot of places, and try many methods.
+
+   Finally I found the variable ~cider-buffer-ns~ (which in function
+   ~cider-current-ns~) docstring description.
+
+   #+begin_example
+   Current Clojure namespace of some buffer.
+
+   Useful for special buffers (e.g. REPL, doc buffers) that have to
+   keep track of a namespace.
+
+   This should never be set in Clojure buffers, as there the namespace
+   should be extracted from the buffer's ns form.
+   #+end_example
+
+   Then I come up an idea:
+
+   - should I include org-mode as special for CIDER ~cider-buffer-ns~?
+     - It is ~nil~ in Clojure buffer.
+     - It is "~user~" in ~cider-repl ob-clojure~ session.
+     - Maybe I should use elisp code to manually set this ~ns~ to ~user~.
+
+4. So the final solution source code is:
+
+   #+begin_src emacs-lisp
+   ;; auto start CIDER REPL session in a complete Leiningen project environment for Org-mode Babel by jack-in.
+   (add-to-list 'org-babel-default-header-args:clojure
+                '(:session . "*cider-repl ob-clojure*"))
+
+   (progn
+     (find-file (expand-file-name "~/.emacs.d/Org-mode/ob-clojure/src/ob_clojure/core.clj"))
+     (cider-jack-in))
+
+   (defun ob-clojure-cider-do-not-find-ns ()
+     "Fix the issue that `cider-current-ns' try to invoke `clojure-find-ns' to extract ns from buffer."
+     (setq-local cider-buffer-ns "user"))
+   (add-hook 'org-mode-hook #'ob-clojure-cider-do-not-find-ns)
+   #+end_src
+
+   But the function ~ob-clojure-cider-don-not-find-ns~ can be smarter:
+
+   How to execute elisp code in a specific buffer without actually switching to
+   it? I can writing a function get a buffer local variable in a specific (regex
+   matched) buffer.
+
+   #+begin_src emacs-lisp
+   (defun ob-clojure-cider-do-not-find-ns ()
+     "Fix the issue that `cider-current-ns' try to invoke `clojure-find-ns' to extract ns from buffer."
+     (with-current-buffer "*cider-repl ob-clojure*"
+       (defvar ob-clojure-cider-repl-ns cider-buffer-ns)
+       (setq-local cider-buffer-ns ob-clojure-cider-repl-ns)))
+   #+end_src
+
+
