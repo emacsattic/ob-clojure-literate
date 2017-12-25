@@ -107,7 +107,9 @@ Don't auto jack in by default for not rude."
 (defvar ob-clojure-literate-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-v M-s") 'ob-clojure-literate-specify-session-header-argument)
-    (define-key map (kbd "C-c C-v M-j") 'ob-clojure-literate-auto-jackin)))
+    (define-key map (kbd "C-c C-v M-j") 'ob-clojure-literate-auto-jackin)
+    (define-key map (kbd "C-x C-e") 'cider-eval-last-sexp)
+    (define-key map (kbd "C-c C-d") 'cider-doc)))
 
 ;;;###autoload
 (defun ob-clojure-literate-enable ()
