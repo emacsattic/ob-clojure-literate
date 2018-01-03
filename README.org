@@ -24,7 +24,12 @@
 
 #+begin_src emacs-lisp
 (use-package ob-clojure-literate
-  :ensure t)
+  :ensure t
+  :after org
+  :init
+  (setq ob-clojure-literate-auto-jackin-p t)
+  (add-hook 'org-mode-hook #'ob-clojure-literate-mode)
+  )
 #+end_src
 
 
