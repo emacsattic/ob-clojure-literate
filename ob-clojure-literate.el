@@ -122,13 +122,15 @@ Don't auto jack in by default for not rude."
           (with-current-buffer "core.clj"
             (cider-jack-in))))))
 
-(defun ob-clojure-literate-cider-do-not-find-ns ()
+(defun ob-clojure-literate-cider-do-not-find-ns (body params)
   "Fix the issue that `cider-current-ns' try to invoke `clojure-find-ns' to extract ns from buffer."
+  ;; TODO: Is it possible to find ns in `body'?
   (when (ob-clojure-literate-any-connection-p)
     (setq ob-clojure-literate-original-ns (cider-current-ns))
     (with-current-buffer ob-clojure-literate-session
       (setq ob-clojure-literate-session-ns cider-buffer-ns))
-    (setq-local cider-buffer-ns ob-clojure-literate-session-ns)))
+    (setq-local cider-buffer-ns ob-clojure-literate-session-ns))
+  (message (format "ob-clojure-literate: current CIDER ns is %s." cider-buffer-ns)))
 
 (defvar ob-clojure-literate-mode-map
   (let ((map (make-sparse-keymap)))
@@ -156,7 +158,7 @@ Don't auto jack in by default for not rude."
     (add-to-list 'org-babel-default-header-args:clojure
                  `(:session . ,ob-clojure-literate-session))
     ;; fix ob-clojure literate find Clojure namespace in Org mode issue.
-    (ob-clojure-literate-cider-do-not-find-ns)
+    (advice-add 'org-babel-execute:clojure :before #'ob-clojure-literate-cider-do-not-find-ns)
     (message "ob-clojure-literate minor mode enabled.")
     ))
 
@@ -170,6 +172,8 @@ Don't auto jack in by default for not rude."
               (mapcar
                (lambda (cons) (if (eq (car cons) :session) t cons))
                org-babel-default-header-args:clojure)))
+  ;; disable `ob-clojure-literate-cider-do-not-find-ns'
+  (advice-remove 'org-babel-execute:clojure #'ob-clojure-literate-cider-do-not-find-ns)
   (setq-local cider-buffer-ns ob-clojure-literate-original-ns)
   ;; Empty all CIDER connections to avoid (cider-current-connection) return any connection.
   (unless (local-variable-if-set-p 'cider-connections)
