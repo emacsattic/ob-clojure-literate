@@ -126,19 +126,13 @@ Don't auto jack in by default for not rude."
   "Set buffer local `cider-connections' for `ob-clojure-literate-mode' `TOGGLE?'."
   (if toggle?
       (progn
-        ;; make `cider-connections' for `ob-clojure-literate-mode' can toggle in org-mode buffer.
+        (setq ob-clojure-literate-cider-connections cider-connections)
         (unless (local-variable-if-set-p 'cider-connections)
           (make-local-variable 'cider-connections))
-        (setq-local cider-connections ob-clojure-literate-cider-connections)
-        )
+        (setq-local cider-connections ob-clojure-literate-cider-connections))
     ;; store/restore emptied CIDER connections by `ob-clojure-literate-enable'.
     (kill-local-variable 'cider-connections) ; kill local variable so that I can get the original global variable value.
-    (setq ob-clojure-literate-cider-connections cider-connections)
     ;; Empty all CIDER connections to avoid `cider-current-connection' return any connection.
-    (unless (local-variable-if-set-p 'cider-connections)
-      (make-local-variable 'cider-connections))
-    (setq-local cider-connections '())
-    (message "ob-clojure-literate minor mode disabled.")
     ))
 
 (defun ob-clojure-literate-cider-do-not-find-ns (body params)
