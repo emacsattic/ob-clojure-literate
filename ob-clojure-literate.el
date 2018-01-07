@@ -122,6 +122,25 @@ Don't auto jack in by default for not rude."
           (with-current-buffer "core.clj"
             (cider-jack-in))))))
 
+(defun ob-clojure-literate-set-local-cider-connections (toggle?)
+  "Set buffer local `cider-connections' for `ob-clojure-literate-mode' `TOGGLE?'."
+  (if toggle?
+      (progn
+        ;; make `cider-connections' for `ob-clojure-literate-mode' can toggle in org-mode buffer.
+        (unless (local-variable-if-set-p 'cider-connections)
+          (make-local-variable 'cider-connections))
+        (setq-local cider-connections ob-clojure-literate-cider-connections)
+        )
+    ;; store/restore emptied CIDER connections by `ob-clojure-literate-enable'.
+    (kill-local-variable 'cider-connections) ; kill local variable so that I can get the original global variable value.
+    (setq ob-clojure-literate-cider-connections cider-connections)
+    ;; Empty all CIDER connections to avoid `cider-current-connection' return any connection.
+    (unless (local-variable-if-set-p 'cider-connections)
+      (make-local-variable 'cider-connections))
+    (setq-local cider-connections '())
+    (message "ob-clojure-literate minor mode disabled.")
+    ))
+
 (defun ob-clojure-literate-cider-do-not-find-ns (body params)
   "Fix the issue that `cider-current-ns' try to invoke `clojure-find-ns' to extract ns from buffer."
   ;; TODO: Is it possible to find ns in `body'?
@@ -130,7 +149,28 @@ Don't auto jack in by default for not rude."
     (with-current-buffer ob-clojure-literate-session
       (setq ob-clojure-literate-session-ns cider-buffer-ns))
     (setq-local cider-buffer-ns ob-clojure-literate-session-ns))
-  (message (format "ob-clojure-literate: current CIDER ns is %s." cider-buffer-ns)))
+  (message (format "ob-clojure-literate: current CIDER ns is [%s]." cider-buffer-ns)))
+
+(defun ob-clojure-literate-set-local-session (toggle?)
+  "Set buffer local `org-babel-default-header-args:clojure' for `ob-clojure-literate-mode' `TOGGLE?'."
+  (if toggle?
+      (progn
+        ;; set local default session for ob-clojure.
+        (setq ob-clojure-literate-session (ob-clojure-literate-set-session))
+        (unless (local-variable-if-set-p 'org-babel-default-header-args:clojure)
+          (make-local-variable 'org-babel-default-header-args:clojure))
+        (add-to-list 'org-babel-default-header-args:clojure
+                     `(:session . ,ob-clojure-literate-session))
+        )
+    ;; remove :session from buffer local default header arguments list.
+    (unless (local-variable-if-set-p 'org-babel-default-header-args:clojure)
+      (make-local-variable 'org-babel-default-header-args:clojure))
+    (setq org-babel-default-header-args:clojure
+          (delq t
+                (mapcar
+                 (lambda (cons) (if (eq (car cons) :session) t cons))
+                 org-babel-default-header-args:clojure)))
+    ))
 
 (defvar ob-clojure-literate-mode-map
   (let ((map (make-sparse-keymap)))
@@ -144,43 +184,21 @@ Don't auto jack in by default for not rude."
 ;;;###autoload
 (defun ob-clojure-literate-enable ()
   "Enable Org-mode buffer locally for `ob-clojure-literate'."
-  (when (equal major-mode 'org-mode)
-    ;; store/restore emptied CIDER connections by `ob-clojure-literate-disable'.
-    (kill-local-variable 'cider-connections) ; kill local variable so that I can get the original global variable value.
-    (setq ob-clojure-literate-cider-connections cider-connections)
-    (unless (local-variable-if-set-p 'cider-connections)
-      (make-local-variable 'cider-connections))
-    (setq-local cider-connections ob-clojure-literate-cider-connections)
-    ;; set local default session for ob-clojure.
-    (setq ob-clojure-literate-session (ob-clojure-literate-set-session))
-    (unless (local-variable-if-set-p 'org-babel-default-header-args:clojure)
-      (make-local-variable 'org-babel-default-header-args:clojure))
-    (add-to-list 'org-babel-default-header-args:clojure
-                 `(:session . ,ob-clojure-literate-session))
-    ;; fix ob-clojure literate find Clojure namespace in Org mode issue.
+  (when (and (not (null cider-connections)) ; only enable `ob-clojure-literate-mode' when has CIDER connections.
+             (equal major-mode 'org-mode)) ; `ob-clojure-literate-mode' only works in `org-mode'.
+    (ob-clojure-literate-set-local-cider-connections ob-clojure-literate-mode)
+    (ob-clojure-literate-set-local-session ob-clojure-literate-mode)
     (advice-add 'org-babel-execute:clojure :before #'ob-clojure-literate-cider-do-not-find-ns)
-    (message "ob-clojure-literate minor mode enabled.")
-    ))
+    (message "ob-clojure-literate minor mode enabled.")))
 
 ;;;###autoload
 (defun ob-clojure-literate-disable ()
   "Disable Org-mode buffer locally for `ob-clojure-literate'."
-  (unless (local-variable-if-set-p 'org-babel-default-header-args:clojure)
-    (make-local-variable 'org-babel-default-header-args:clojure))
-  (setq org-babel-default-header-args:clojure
-        (delq t
-              (mapcar
-               (lambda (cons) (if (eq (car cons) :session) t cons))
-               org-babel-default-header-args:clojure)))
-  ;; disable `ob-clojure-literate-cider-do-not-find-ns'
   (advice-remove 'org-babel-execute:clojure #'ob-clojure-literate-cider-do-not-find-ns)
   (setq-local cider-buffer-ns ob-clojure-literate-original-ns)
-  ;; Empty all CIDER connections to avoid (cider-current-connection) return any connection.
-  (unless (local-variable-if-set-p 'cider-connections)
-    (make-local-variable 'cider-connections))
-  (setq-local cider-connections '())
-  (message "ob-clojure-literate minor mode disabled.")
-  )
+  (ob-clojure-literate-set-local-cider-connections ob-clojure-literate-mode)
+  (ob-clojure-literate-set-local-session ob-clojure-literate-mode)
+  (message "ob-clojure-literate minor mode disabled."))
 
 ;;;###autoload
 (if ob-clojure-literate-auto-jackin-p (ob-clojure-literate-auto-jackin))
