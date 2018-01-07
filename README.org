@@ -77,6 +77,49 @@ So I decide to solve this problem in my way.
 1. 
 
 
+* Test
+
+** use default session
+
+1. Enable ~ob-clojure-literate-mode~.
+
+   #+begin_src emacs-lisp
+   (ob-clojure-literate-mode 1)
+   #+end_src
+
+2. define a variable in CIDER REPL.
+
+   Go to CIDER REPL then type in src_clojure{(def my-name "stardiviner")} 
+
+3. print the value defined in CIDER REPL.
+
+   #+begin_src clojure
+   (prn my-name)
+   #+end_src
+
+   #+RESULTS:
+   : "stardiviner"
+
+   The result should be "~stardiviner~".
+
+4. Then disable ~ob-clojure-literate-mode~.
+
+   #+begin_src emacs-lisp
+   (ob-clojure-literate-mode -1)
+   #+end_src
+
+   #+RESULTS:
+
+5. Then try to print that variable again.
+
+   #+begin_src clojure
+   (prn my-name)
+   #+end_src
+
+
+
+
+* Theory
 
 ** This package workflow
 
