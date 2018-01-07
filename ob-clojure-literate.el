@@ -28,6 +28,7 @@
   :prefix "ob-clojure-literate-"
   :group 'ob-babel)
 
+;;;###autoload
 (defcustom ob-clojure-literate-auto-jackin-p nil
   "Auto jack in ob-clojure project.
 Don't auto jack in by default for not rude."
