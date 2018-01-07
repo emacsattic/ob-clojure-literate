@@ -1,6 +1,6 @@
 #+TITLE: ob-clojure-literate
 
-* Screenshots
+* Features
 
 ** use default session
 
@@ -13,9 +13,34 @@
 : #namespace[user]
 #+end_src
 
-** support generate plot
+** specify session
 
-** support header argument :dir
+You can specify session for current clojure src block with =[C-c C-v M-s]= /
+~ob-clojure-literate-specify-session-header-argument~.
+
+#+begin_src org
+,#+begin_src clojure :session "*cider-repl <PROJECT>*" :results output
+(prn *ns*)
+,#+end_src
+
+,#+RESULTS:
+: #namespace[user]
+#+end_src
+
+** TODO let org-babel-edit-src special buffer connect to correct CIDER REPL to get completion
+:LOGBOOK:
+- State "TODO"       from              [2018-01-07 Sun 11:10]
+:END:
+
+** TODO support header argument :dir
+:LOGBOOK:
+- State "TODO"       from              [2018-01-07 Sun 11:10]
+:END:
+
+** TODO support generating plot in working directory or :dir specified directory
+:LOGBOOK:
+- State "TODO"       from              [2018-01-07 Sun 11:10]
+:END:
 
 
 * Installation
@@ -45,20 +70,56 @@ _This README is totally written in Org-mode Literate Programming._
 So I decide to solve this problem in my way.
 
 
-* Todos
-
-** TODO Support generate inline plot image under current working directory
-:LOGBOOK:
-- State "TODO"       from              [2017-12-22 Fri 09:52]
-:END:
-
-** TODO Support babel header argument :dir
-:LOGBOOK:
-- State "TODO"       from              [2017-12-22 Fri 09:52]
-:END:
-
-
 * Usage
+
+** workflow
+
+1. 
+
+
+* Test
+
+** use default session
+
+1. Enable ~ob-clojure-literate-mode~.
+
+   #+begin_src emacs-lisp
+   (ob-clojure-literate-mode 1)
+   #+end_src
+
+2. define a variable in CIDER REPL.
+
+   Go to CIDER REPL then type in src_clojure{(def my-name "stardiviner")} 
+
+3. print the value defined in CIDER REPL.
+
+   #+begin_src clojure
+   (prn my-name)
+   #+end_src
+
+   #+RESULTS:
+   : "stardiviner"
+
+   The result should be "~stardiviner~".
+
+4. Then disable ~ob-clojure-literate-mode~.
+
+   #+begin_src emacs-lisp
+   (ob-clojure-literate-mode -1)
+   #+end_src
+
+   #+RESULTS:
+
+5. Then try to print that variable again.
+
+   #+begin_src clojure
+   (prn my-name)
+   #+end_src
+
+
+
+
+* Theory
 
 ** This package workflow
 
@@ -165,5 +226,3 @@ So I decide to solve this problem in my way.
        (defvar ob-clojure-cider-repl-ns cider-buffer-ns)
        (setq-local cider-buffer-ns ob-clojure-cider-repl-ns)))
    #+end_src
-
-
