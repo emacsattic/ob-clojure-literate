@@ -27,6 +27,15 @@ You can specify session for current clojure src block with =[C-c C-v M-s]= /
 : #namespace[user]
 #+end_src
 
+** support initiate session with =[C-c C-v z]= like other languages
+
+#+begin_src clojure :session "*cider-repl ob-clojure*" :var name="stardiviner"
+(prn "hello, " name)
+#+end_src
+
+This is supposed to be implemented in ~ob-clojure.el~ by default.
+It will great if ~ob-clojure.el~ want to merge this code.
+
 ** TODO let org-babel-edit-src special buffer connect to correct CIDER REPL to get completion
 :LOGBOOK:
 - State "TODO"       from              [2018-01-07 Sun 11:10]
@@ -116,7 +125,15 @@ So I decide to solve this problem in my way.
    (prn my-name)
    #+end_src
 
+** initiate session
 
+1. make sure you don't have following session initiated yet.
+
+   #+begin_src clojure :session "*cider-repl ob-clojure*" :var name="stardiviner"
+   (prn "hello, " name)
+   #+end_src
+
+2. Put your point on upper src block then initiate session with =[C-c C-v z]=.
 
 
 * Theory
