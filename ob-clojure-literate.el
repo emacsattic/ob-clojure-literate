@@ -220,12 +220,13 @@ Don't auto jack in by default for not rude."
 
 (defvar ob-clojure-literate-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-v M-s") 'ob-clojure-literate-specify-session-header-argument)
-    (define-key map (kbd "C-c C-v M-j") 'ob-clojure-literate-auto-jackin)
-    ;; (define-key map (kbd "C-c C-e") 'cider-eval-last-sexp)
-    ;; (define-key map (kbd "C-c C-d") 'cider-doc)
     map)
   "Keymap for `ob-clojure-literate-mode'.")
+
+(define-key org-babel-map (kbd "M-s") 'ob-clojure-literate-specify-session-header-argument)
+(define-key org-babel-map (kbd "M-j") 'ob-clojure-literate-auto-jackin)
+;; (define-key org-babel-map (kbd "M-e") 'cider-eval-last-sexp)
+;; (define-key org-babel-map (kbd "M-d") 'cider-doc)
 
 ;;;###autoload
 (defun ob-clojure-literate-enable ()
