@@ -85,60 +85,1159 @@ So I decide to solve this problem in my way.
 
 1. 
 
+* Literate Programming
 
-* Test
+** fix CIDER and clojure-mode find ns in Org-mode buffer issue
+CLOSED: [2018-01-04 Thu 19:18]
+:LOGBOOK:
+- State "DONE"       from              [2018-01-04 Thu 19:18]
+:END:
 
-** use default session
+- [X] https://github.com/clojure-emacs/clojure-mode/pull/465
 
-1. Enable ~ob-clojure-literate-mode~.
+** DONE always dynamic update ob-clojure-literate ns [1/1]
+CLOSED: [2018-01-07 Sun 13:31] SCHEDULED: <2018-01-05 Fri>
+:LOGBOOK:
+- State "DONE"       from "STARTED"    [2018-01-07 Sun 13:31]
+CLOCK: [2018-01-07 Sun 13:25]--[2018-01-07 Sun 13:31] =>  0:06
+- State "STARTED"    from "TODO"       [2018-01-07 Sun 11:42]
+CLOCK: [2018-01-07 Sun 11:42]--[2018-01-07 Sun 13:24] =>  1:42
+- Removed deadline, was "[2018-01-05 Fri]" on [2018-01-06 Sat 22:08]
+- State "TODO"       from              [2018-01-05 Fri 00:21]
+:END:
+
+- [X] I need to create a function to always dynamic retrieve ns back.
+
+** DONE specify CIDER REPL connection through ~:session~ with project name [5/5]
+CLOSED: [2017-12-21 Thu 18:45]
+    :LOGBOOK:
+    - State "DONE"       from "FEATURE"    [2017-12-21 Thu 18:45]
+    - State "FEATURE"    from              [2017-08-08 Tue 10:20]
+    :END:
+
+Currently, CIDER will append project name after REPL buffer like "~*cider-repl
+localhost*~", and "~*cider-repl xunfei-clj*~".
+
+- [X] support "clj" "cljs" type.
+  - [X] write in issue: https://github.com/clojure-emacs/cider/issues/2016
+- [X] dive into ob-clojure.el ~(cider-current-connection)~.
+  - [X] check out how it works, and how to apply into Org-mode buffer.
+- [X] able to complete Clojure code when edit code block with =[C-c ']=.
+
+** DONE support switch Clojure REPL session with =[C-c C-v z]= [7/7]
+CLOSED: [2018-01-07 Sun 20:23] SCHEDULED: <2018-01-06 Sat>
+:LOGBOOK:
+- State "DONE"       from "STARTED"    [2018-01-07 Sun 20:23]
+- State "STARTED"    from "TODO"       [2018-01-07 Sun 18:45]
+CLOCK: [2018-01-07 Sun 18:45]--[2018-01-07 Sun 20:23] =>  1:38
+- State "TODO"       from              [2018-01-06 Sat 12:08]
+:END:
+
+#+begin_example
+(error "No org-babel-initiate-session function for nil!")
+#+end_example
+
+- [X] check out function ~org-babel-initiate-session~ source code.
+- [X] reference corresponding command
+  - [X] org-babel-python-initiate-session
+  - [X] org-babel-sh-initiate-session
+  - [X] org-babel-js-initiate-session
+  - [X] org-babel-sql-mode-initiate-session
+- [X] add to README
+
+#+begin_src clojure :session "*cider-repl ob-clojure*"
+(prn "hello, world!")
+#+end_src
+
+#+NAME: org-babel-initiate-session
+#+begin_src emacs-lisp
+(funcall prep-cmd session params)
+(funcall init-cmd session params)
+#+end_src
+
+** DONE support generating plot in working directory or :dir specified directory [32/32]
+CLOSED: [2018-03-02 Fri 13:14] DEADLINE: <2018-02-13 Tue>
+:PROPERTIES:
+:Attachments: JVM%20current%20working%20directory.png
+:ID:       b356aa4a-fd93-450d-be52-0f13eeb90705
+:END:
+:LOGBOOK:
+- State "DONE"       from "STARTED"    [2018-03-02 Fri 13:14]
+CLOCK: [2018-02-14 Wed 20:28]--[2018-02-15 Thu 09:58] => 13:30
+CLOCK: [2018-02-14 Wed 12:13]--[2018-02-14 Wed 12:32] =>  0:19
+CLOCK: [2018-02-14 Wed 11:47]--[2018-02-14 Wed 12:01] =>  0:14
+CLOCK: [2018-02-13 Tue 21:15]--[2018-02-14 Wed 01:26] =>  4:11
+CLOCK: [2018-02-13 Tue 16:30]--[2018-02-13 Tue 16:59] =>  0:29
+CLOCK: [2018-02-13 Tue 15:07]--[2018-02-13 Tue 15:40] =>  0:33
+CLOCK: [2017-12-22 Fri 20:29]--[2017-12-22 Fri 21:23] =>  0:54
+- Not scheduled, was "[2017-12-21 Thu]" on [2017-12-21 Thu 21:28]
+- State "STARTED"    from "ISSUE"      [2017-12-21 Thu 21:28]
+- State "ISSUE"      from              [2017-06-28 Wed 15:25]
+:END:
+
+#+ATTR_ORG: :width 500
+#+ATTR_LATEX: :width 5.0in
+#+ATTR_HTML: :width 500px
+[[file:data/b3/56aa4a-fd93-450d-be52-0f13eeb90705/JVM%20current%20working%20directory.png]]
+
+#+begin_example
+:dir -- specify the default directory for code block execution
+#+end_example
+
+- [X] record ob-clojure project path, and current org-mode file path, move
+  generated plot image from ob-clojure project path to current working
+  directory.
+
+  - [X] insert clojure code of switching working directory before ~BODY~ of
+    ob-clojure like ~ob-gnuplot~.
+
+    #+begin_src emacs-lisp
+    (let* ((directory (and (buffer-file-name)
+                           (file-name-directory (buffer-file-name))))
+           (add-to-body (lambda (code)
+                          (setq body (concat code "\n" body)))))
+      (when directory
+        (funcall add-to-body (format "(System/setProperty 'user.dir' '%s')" directory))))
+    #+end_src
+
+    - [X] how to add advice on ~org-babel-expand-body:clojure~? I want to add
+      extra let-binding in ~org-babel-expand-body:clojure~.
+
+      - [X] https://emacs.stackexchange.com/questions/38818/how-to-write-this-advice-for-inject-code-into-let-binding
+
+      original code:
+
+      #+begin_src emacs-lisp :tangle "/tmp/org-babel-expand-1.el"
+      (defun org-babel-expand-body:clojure (body params)
+        "Expand BODY according to PARAMS, return the expanded body."
+        (let* ((vars (org-babel--get-vars params))
+               (result-params (cdr (assq :result-params params)))
+               (print-level nil) (print-length nil)
+               (body (org-trim
+                      (if (null vars) (org-trim body)
+                        (concat "(let ["
+                                (mapconcat
+                                 (lambda (var)
+                                   (format "%S (quote %S)" (car var) (cdr var)))
+                                 vars "\n      ")
+                                "]\n" body ")")))))
+          (if (or (member "code" result-params)
+                  (member "pp" result-params))
+              (format "(clojure.pprint/pprint (do %s))" body)
+            body)))
+      #+end_src
+
+      After add some code:
+
+      #+begin_src emacs-lisp :tangle "/tmp/org-babel-expand-2.el"
+      (defun org-babel-expand-body:clojure (body params)
+        "Expand BODY according to PARAMS, return the expanded body."
+        (let* ((vars (org-babel--get-vars params))
+               (result-params (cdr (assq :result-params params)))
+               (print-level nil) (print-length nil)
+               (body (org-trim
+                      (if (null vars) (org-trim body)
+                        (concat "(let ["
+                                (mapconcat
+                                 (lambda (var)
+                                   (format "%S (quote %S)" (car var) (cdr var)))
+                                 vars "\n      ")
+                                "]\n" body ")"))))
+               (directory (and (buffer-file-name)
+                               (file-name-directory (buffer-file-name))))
+               (out-file (cdr (assq :file params)))
+               (add-to-body (lambda (code)
+                              (setq body (concat code "\n" body))))
+               )
+          (when directory
+            (funcall add-to-body (format "(System/setProperty 'user.dir' '%s')" directory)))
+          (when out-file
+            (funcall
+             add-to-body
+             (format "(save ob-clojure-incanter-plot '%s')" ; use static variable as convention.
+                     (concat directory out-file))))
+          (if (or (member "code" result-params)
+                  (member "pp" result-params))
+              (format "(clojure.pprint/pprint (do %s))" body)
+            body)))
+      #+end_src
+
+- [X] Incanter support specifying save directory in ~save~.
+
+  - [X] check out source code of ~save~.
+
+  - [X] it does not respect property "user.dir"
+    - [X] https://github.com/incanter/incanter/issues/382
+
+      Just at a cursory glance:
+
+      Chart saving is implemented via the save multimethod in incanter.charts,
+      defined for ~JFreeChart~ objects. The implementation wants an input called
+      filename, "but" internally it's actually calling ~java.File.~ on the
+      "filename" arg. So, in theory, one could accomplish this by passing the
+      absolute path for chart output as a value. So, maybe trying to create the
+      path as a function of the current value of ~user.dir~ (or the actual
+      directory you're interested in) and the target file. If you're doing this
+      programmatically, as long as you can access the current working directory,
+      you should be able to pass it to the save method as described.
+
+      More importantly: incanter is defaulting to java's interpretation of paths
+      in this case. I'm guessing (but haven't verified) that the ~java.io.File~
+      class is not respecting the current working directory, perhaps caching the
+      initial value of ~user.dir~ (perhaps whatever the property was on class
+      initialization).
+
+  #+begin_src clojure
+  (import 'java.io.FileOutputStream)
+  (def fos (FileOutputStream. "/tmp/hist.png"))
+  (def hist (histogram (sample-normal 1000)))
+  (save hist fos)
+  (.close fos)
+
+  (view "file:///tmp/hist.png")
+  #+end_src
+
+  #+begin_src emacs-lisp
+  (defun org-babel-expand-body:clojure (body params)
+    "Expand BODY according to PARAMS, return the expanded body."
+    (let* ((vars (org-babel--get-vars params))
+           (result-params (cdr (assq :result-params params)))
+           (print-level nil) (print-length nil)
+           (body (org-trim
+                  (if (null vars) (org-trim body)
+                    (concat "(let ["
+                            (mapconcat
+                             (lambda (var)
+                               (format "%S (quote %S)" (car var) (cdr var)))
+                             vars "\n      ")
+                            "]\n" body ")"))))
+           (directory (and (buffer-file-name)
+                           (file-name-directory (buffer-file-name))))
+           (out-file (cdr (assq :file params)))
+           (add-to-body (lambda (code)
+                          (setq body (concat code "\n" body))))
+           )
+      (when directory
+        (funcall add-to-body (format "(System/setProperty \"user.dir\" '%s')" directory))
+        (funcall add-to-body "(import 'java.io.FileOutputStream)")
+        (funcall add-to-body
+                 (format
+                  "(def incanter-plot (FileOutputStream. %s))"
+                  ;; FIXME:
+                  (expand-file-name directory out-file)))
+        )
+      (when out-file
+        (funcall
+         add-to-body
+         (format "(save ob-clojure-incanter-plot '%s')" ; use static variable as convention.
+                 (concat directory out-file))))
+      (if (or (member "code" result-params)
+              (member "pp" result-params))
+          (format "(clojure.pprint/pprint (do %s))" body)
+        body)))
+
+  #+end_src
+
+- [X] move the saved plot image to Org-mode buffer current working directory.
+
+  #+begin_src clojure
+  (ns your-project
+    (:require [clojure.java.io :as io]))
+
+  (defn copy-file [source-path dest-path]
+    (io/copy (io/file source-path) (io/file dest-path)))
+
+  (copy-file "/home/username/squirrel.txt" "/home/username/burt-reynolds.txt")
+  #+end_src
+
+- [X] change CIDER/nREPL project directory
+
+    #+begin_src emacs-lisp
+    (setq nrepl-project-dir directory)
+    ;; Automatically becomes buffer-local when set.
+    #+end_src
+
+    This does not work too.
+
+- [X] change Clojure Java file writer to support ~System/setProperty~.
+
+- [X] change JVM current working directory
+
+  https://stackoverflow.com/questions/840190/changing-the-current-working-directory-in-java#840229
+
+  There is no reliable way to do this in pure Java. Setting the user.dir
+  property via ~System.setProperty()~ or ~java -Duser.dir=...~ does seem to affect
+  subsequent creations of Files, but not e.g. ~FileOutputStreams~.
+
+  The ~File(String parent, String child)~ /constructor/ can help if you build up
+  your directory path separately from your file path, allowing easier swapping.
+
+  An alternative is to set up a script to run Java from a different directory,
+  or use JNI native code as suggested below.
+
+  The [[https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4045688][relevant Sun bug]] was closed in 2008 as "will not fix".
+
+    #+begin_src clojure
+    (System/setProperty "user.dir" "/home/stardiviner")
+    (System/getProperty "user.dir")
+    #+end_src
+
+    This does not work too.
+
+    #+begin_src clojure
+    (use '[clojure.java.shell])
+
+    (sh "ls")
+
+    (binding [*sh-dir* "/home/stardiviner"]
+      (sh "ls"))
+    #+end_src
+
+- [X] use ~clj~ instead of Lein.
+  - [X] ask in Slack
+
+- [X] consider to use ~clomacs~
+  - [X] try to figure out can ~clomacs~ use ob-clojure repl session
+  - [X] [[file:~/Org/Wiki/Computer%20Technology/Programming/Emacs/modes/clomacs.org::*Full-fledged%20example][Full-fledged example]]
+  - [X] dive into clomacs source code
+
+- [X] The issue is *the generated file save to current working directory*, not in
+  Org-mode babel block specified ~:dir~ path.
+
+  For example:
+
+  #+begin_src org
+  ,#+begin_src clojure :session :results file :dir "data/images" :var fname="clojure-babel-figure-result.png"
+  (use '(incanter core stats charts io))
+
+  (def my-plot (function-plot sin -10 10))
+
+  (save my-plot "clojure-babel-figure-result.png")
+
+  my-plot
+  ,#+end_src
+
+  ,#+RESULTS:
+  [[file:/home/stardiviner/Org/Wiki/Computer Technology/Programming/Emacs/modes/Org-mode/data/images/#object[org.jfree.chart.JFreeChart 0x49b53c9e "org.jfree.chart.JFreeChart@49b53c9e"]]]
+  #+end_src
+
+- [X] try to ~save~ with full path to image.
+
+  #+begin_src clojure
+  (use '(incanter core stats charts io))
+
+  (def my-plot (function-plot sin -10 10))
+
+  (view my-plot)
+
+  (save my-plot (concat "clojure-babel-figure-result.png"))
+
+  (format "%s %s" "hello, " "world!")
+  #+end_src
+
+- [X] get some ideas from ditaa, plantuml exporters which allow you to define
+  a src block which when executed, generate diagrams and how they include
+  those as results (essentially, just put an org link to the generated image
+  file).
+
+- [X] ask in Slack #cider, #clojure
+  - [X] how to change CIDER/nREPL currently working directory?
+  - [X] https://clojurians.slack.com/archives/C0617A8PQ/p1498742103769754
+  - [X] AFAIK you can't change JVM working dir, http://raynes.github.io/fs/me.raynes.fs.html#var-*cwd*
+  - [X] I see this in the cider jack in stacktrace:
+
+    but i doubt it would work. just changing that wouldn't add anything to your
+    classpath, etc and that's buffer local to the server proc it looks like
+
+- [X] dig into =cider-interactive-eval= source code
+  - [X] =nrepl-request:eval=
+
+- [X] ask in org-mode mailing list
+  - [X] https://lists.gnu.org/archive/html/emacs-orgmode/2017-06/msg00285.html
+  - [X] https://lists.gnu.org/archive/html/emacs-orgmode/2017-06/msg00540.html
+  - [X] https://mail.google.com/mail/u/0/#label/Emacs%2FOrg-mode/15cee5cdeab8d02d
+
+*** get absolute path
+
+#+begin_src clojure :results output
+(println
+ (System/getProperty "user.dir"))
+(println
+ (-> (java.io.File. ".")
+     .getCanonicalPath))
+#+end_src
+
+#+RESULTS[<2018-02-13 16:50:02> 59ebf7fa85e375d13ce269f3495f7cda44ff3400]:
+: /home/stardiviner/.emacs.d/Org-mode/ob-clojure
+: /home/stardiviner/.emacs.d/Org-mode/ob-clojure
+
+** DONE [#A] support save plot image through ~:results graphics :file "..\quot{}~ or ~:results file :file "..\quot{}~
+CLOSED: [2018-03-02 Fri 12:37] DEADLINE: <2018-02-13 Tue>
+:PROPERTIES:
+:Source_Code: https://code.orgmode.org/bzg/org-mode/pulls/5
+:END:
+    :LOGBOOK:
+    - State "DONE"       from "STARTED"    [2018-03-02 Fri 12:37]
+    CLOCK: [2018-03-02 Fri 11:47]--[2018-03-02 Fri 12:37] =>  0:50
+    CLOCK: [2018-03-01 Thu 00:57]--[2018-03-01 Thu 02:07] =>  1:10
+    CLOCK: [2018-02-28 Wed 23:02]--[2018-03-01 Thu 00:43] =>  1:41
+    CLOCK: [2018-02-21 Wed 11:07]--[2018-02-21 Wed 11:52] =>  0:45
+    CLOCK: [2018-02-21 Wed 08:36]--[2018-02-21 Wed 09:08] =>  0:32
+    - Not scheduled, was "[2017-12-21 Thu]" on [2018-02-13 Tue 01:44]
+    - State "STARTED"    from "FEATURE"    [2017-12-21 Thu 21:30]
+    - State "FEATURE"    from              [2017-08-08 Tue 10:21]
+    :END:
+
+- [X] https://emacs.stackexchange.com/questions/38857/the-formatted-string-passed-to-cider-eval-function-error
+- [X] https://clojureverse.org/t/ask-for-help-on-my-ob-clojure-literate-project-code/1652
+- [X] asked @bozhidar in Slack
+- [X] https://mail.google.com/mail/u/0/#label/Emacs%2FOrg-mode/1619816382741e00
+
+- [X] https://github.com/clojure-emacs/cider/issues/2016
+
+- [X] [[file:~/Org/Wiki/Computer%20Technology/Programming/Emacs/modes/Org-mode/Org-mode.org::#simple%20print%20link%20string%20for%20Org-mode%20inline%20image][simple print link string -- ~(princ (format "/path/to/file") var)~]]
+
+#+begin_src emacs-lisp
+(defun org-babel-expand-body:clojure (body params)
+  "Expand BODY according to PARAMS, return the expanded body."
+  (let* ((vars (org-babel--get-vars params))
+         (result-params (cdr (assq :result-params params)))
+         (print-level nil) (print-length nil)
+         (body (org-trim
+                (if (null vars) (org-trim body)
+                  (concat "(let ["
+                          (mapconcat
+                           (lambda (var)
+                             (format "%S (quote %S)" (car var) (cdr var)))
+                           vars "\n      ")
+                          "]\n" body ")"))))
+         (directory (and (buffer-file-name)
+                         (file-name-directory (buffer-file-name))))
+         (result-type (cdr asq :results params))
+         (out-file (cdr (assq :file params)))
+         (add-to-body (lambda (code)
+                        (setq body (concat code "\n" body))))
+         )
+    (when directory
+      (funcall add-to-body (format "(System/setProperty 'user.dir' '%s')" directory)))
+    (when (and (string-match-p (regexp-opt '("graphics" "file")) result-type)
+               out-file)
+      (funcall
+       add-to-body
+       (format "(save ob-clojure-incanter-plot '%s')" ; use static variable as convention.
+               (concat directory out-file))))
+    (if (or (member "code" result-params)
+            (member "pp" result-params))
+        (format "(clojure.pprint/pprint (do %s))" body)
+      body)))
+#+end_src
+
+- [X] after solved problem and implemented, record to Org
+  - [X] [[file:~/Org/Wiki/Computer%20Technology/Programming/Programming%20Languages/Clojure/Data/Clojure%20Packages/Incanter.org::*Integrate%20with%20Emacs%20Org-mode][Integrate Incanter with Emacs Org-mode]]
+  - [X] [[file:~/Org/Wiki/Computer%20Technology/Programming/Emacs/modes/Org-mode/Org-mode.org::#ob-clojure%20inline%20plot%20image][inline plot image in Org-mode]]
+  - [X] [[file:~/Org/Wiki/Computer%20Technology/Programming/Emacs/Emacs%20Lisp/Data/Manuals/My%20Emacs%20Lisp%20Syntax%20Reference/My%20Emacs%20Lisp%20Syntax%20Reference.org::*inject%20code%20into%20function%20let-binding][inject code into function let-binding]]
+  - [X] create an org-mode snippet for this.
+  - [X] add commentary in source code about this.
+
+*** test
+
+#+begin_src clojure :cache no :dir "data/images" :results graphics :file "ob-clojure-literate.png"
+(use '(incanter core stats datasets charts io pdf))
+(def ob-clojure-literate (histogram (sample-normal 1000)))
+;; (save ob-clojure-literate-incanter-plot "data/images/ob-clojure-literate.png")
+#+end_src
+
+#+RESULTS:
+[[file:/home/stardiviner/Org/Projects/Programming Projects/data/images/ob-clojure-literate.png]]
+
+
+#+begin_src clojure :cache no :dir "data/images" :results graphics :graphics-file "ob-clojure-literate.png"
+(save ob-clojure-literate-incanter-plot "data/images/ob-clojure-literate.png")
+#+end_src
+
+#+RESULTS:
+: class java.io.FileNotFoundExceptionclass java.io.FileNotFoundExceptionFileNotFoundException data/images/ob-clojure-literate.png (No such file or directory)  java.io.FileOutputStream.open0 (FileOutputStream.java:-2)
+
+
+#+begin_src clojure :cache no :dir "data/images" :results file :file "ob-clojure-literate.png"
+(use '(incanter core stats datasets charts io pdf))
+(def ob-clojure-literate-incanter-plot (histogram (sample-normal 1000)))
+
+(view ob-clojure-literate-incanter-plot)
+
+;; (save ob-clojure-literate-incanter-plot "/home/stardiviner/Org/Wiki/Computer Technology/Programming/Programming Languages/Clojure/Data/Clojure Packages/data/images/ob-clojure-literate.png")
+
+(save ob-clojure-literate-incanter-plot "/home/stardiviner/Org/Projects/Programming Projects/data/images/ob-clojure-literate.png")
+
+;; (save ob-clojure-literate-incanter-plot "/home/stardiviner/ob-clojure-literate.png")
+#+end_src
+
+
+#+begin_src clojure :session :dir "data/images" :results file :file "clojure-babel-figure-result.png" :var fname="clojure-babel-figure-result.png"
+(use '(incanter core stats datasets charts io pdf))
+(import 'java.io.FileOutputStream)
+
+(def output-file (FileOutputStream. (str "data/images/" fname)))
+
+(def my-plot (histogram (sample-normal 1000)))
+
+(save my-plot output-file)
+(.close output-file)
+#+end_src
+
+#+RESULTS[<2018-02-21 08:50:47> 324ed08f187613e6856036dd7a6ed79b68cd3b0f]:
+[[file:/home/stardiviner/Org/Projects/Programming Projects/data/images/clojure-babel-figure-result.png]]
+
+#+begin_src clojure
+(import 'java.io.FileOutputStream)
+(def fos (FileOutputStream. "/tmp/hist.png"))
+(def hist (histogram (sample-normal 1000)))
+(save hist fos)
+(.close fos)
+
+(view "file:///tmp/hist.png")
+#+end_src
+
+*** DONE problem [28/28]
+CLOSED: [2018-03-02 Fri 12:37]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2018-03-02 Fri 12:37]
+- State "TODO"       from "DONE"       [2018-02-21 Wed 10:48]
+- State "DONE"       from              [2018-02-14 Wed 17:55]
+:END:
+
+Let =ob-clojure.el= support use return value as file result. Just like Python
+src_python{return filename} and babel header arguments: src_org{:results file} .
+
+- You may have to output your image to stdout instead of a file.
+- Or you may have to return the file name?
+
+
+- [X] http://orgmode.org/worg/org-tutorials/org-plot.html
+
+- [X] search
+  - [X] https://groups.google.com/forum/#!topic/clojure/gthjNWfAWKo
+- [X] Ask
+  - [X] in Org-mode ML
+  - [X] https://emacs.stackexchange.com/questions/30849/how-to-generate-inline-plot-result-for-ob-clojure
+  - [X] ask Tim Cross
+    - [X] https://mail.google.com/mail/u/0/#inbox/15cb18cc4f350eb0
+    - [X] send email
+    - [X] respond https://mail.google.com/mail/u/0/#inbox/15cb18cc4f350eb0
+  - [X] Slack clojurians #emacs
+
+- [X] let CIDER support change current working directory dynamically based on
+  where it is invoked by Emacs/Org-mode.
+  - [X] add issue on CIDER to let CIDER support dynamic working directory.
+  - [X] post issue
+  - [X] https://github.com/clojure-emacs/cider/issues/2016
+  - [X] impossible to change JVM working directory
+  - [X] added this feature?
+
+- [X] check out Org-mode source code of ~:results graphics~, ~:file~, ~:results file~
+  ~:results value file~ etc.
+  - [X] check out Org-mode Info about  ~:results graphics~, ~:file~ etc.
+  - [X] [[file:~/Org/Wiki/Computer%20Technology/Programming/Emacs/modes/Org-mode/Org-mode.org::*Type][try the other result types]] like ~:results graphics~ etc.
+
+- [X] check out ob-clojure source code
+  - [X] ~org-babel-execute:clojure~
+
+- [X] The problem is on the target file path contains space will cause wrong writing when passing this path.
+
+The following target file path without space in `ob-clojure-literate-inject-code` advice works fine.
+
+#+begin_src clojure
+(save ob-clojure-literate-incanter-plot "/home/stardiviner/ob-clojure-literate.png")
+#+end_src
+
+But at Clojure side, I execute clojure code with target file path contains space also works fine:
+
+#+begin_src emacs-lisp
+(save ob-clojure-literate-incanter-plot "/home/stardiviner/Org/Wiki/Computer Technology/Programming/Programming Languages/Clojure/Data/Clojure Packages/data/images/ob-clojure-literate.png")
+#+end_src
+
+I tried toggle Edebug on following functions:
+
+- org-babel-expand-body:clojure (expanding seems correct)
+- org-babel-execute:clojure (this seems correct too)
+  - nrepl-sync-request:eval (correct)
+    - nrepl-send-sync-request (correct)
+      - nrepl-send-request (correct)
+        - after ~(process-send-string nil message)~, the image is save (seems
+          Incanter save works correct as @xuchunyang said.) I have not found
+          this step works.
+
+- [X] the probelm is on this code part of ~org-babel-execute:clojure~:
+
+#+begin_src emacs-lisp
+(org-babel-result-cond (cdr (assq :result-params params))
+      result
+      (condition-case nil (org-babel-script-escape result)
+	(error result)))
+#+end_src
+
+This is because org-babel make image empty.
+
+Find out why?
+
+- [X] the finally real problem is ~:file~. Should use ~:graphics-file~ for avoid collision.
+
+- [X] check out function ~org-babel-execute-src-block~, how does it handle the ~:file~ header argument.
+
+ob-core.el [[file:~/Code/Emacs/org-mode/lisp/ob-core.el::(let%20((file%20(cdr%20(assq%20:file%20params))))][If non-empty result and :file then write to :file.]]
+
+Seems this is the problem.
+
+#+begin_src clojure :cache no :dir "data/images" :graphics-file "ob-clojure-literate.png"
+(save ob-clojure-literate-incanter-plot "data/images/ob-clojure-literate.png")
+#+end_src
+
+#+RESULTS:
+[[file:/home/stardiviner/Org/Projects/Programming Projects/data/images/class java.io.FileNotFoundExceptionclass java.io.FileNotFoundExceptionFileNotFoundException data/images/ob-clojure-literate.png (No such file or directory)  java.io.FileOutputStream.open0 (FileOutputStream.java:-2)]]
+
+
+
+#+begin_src clojure :cache no :dir "data/images" :results graphics :graphics-file "ob-clojure-literate.png"
+(save ob-clojure-literate-incanter-plot "data/images/ob-clojure-literate.png")
+#+end_src
+
+#+RESULTS:
+: class java.io.FileNotFoundExceptionclass java.io.FileNotFoundExceptionFileNotFoundException data/images/ob-clojure-literate.png (No such file or directory)  java.io.FileOutputStream.open0 (FileOutputStream.java:-2)
+
+- [X] write advice to reset ~result~ or inline image file link to correct result.
+- [X] reference other codes. search "graphics-file".
+
+*** DONE understand things
+CLOSED: [2017-12-21 Thu 21:25]
+    :LOGBOOK:
+    - State "DONE"       from "TODO"       [2017-12-21 Thu 21:25]
+    - State "TODO"       from              [2017-06-29 Thu 12:53]
+    :END:
+
+I still think your aking things more difficult for yourself than you need to.
+You need to be very familiar with Clojure before you can start thinking about
+doing clojure using a literate programming approach. I also don't think hyou
+will get far relying on just dynamic clojjure source blocks - at least not until
+you fully understand the relationships between clojure source code, clojure
+compiled code, namespaces, etc and then cider, the cider nrepl and all the
+connections at that level. You need to fully understand the role of the
+project.clj file and how that impacts on dependencies and namespaces, the
+differences between require and use and why require is usually preferred over
+use etc. Then you need to understand how cider works with and without a
+=project.clj= file - where it will look for the =project.clj= file, what it will do
+without finding one and what you will need to do by hand.
+
+*** other language examples
+
+**** ob-R
+
+**** ob-gnuplot
+
+#+begin_src emacs-lisp :eval no
+(defun org-babel-execute:gnuplot (body params)
+  "Execute a block of Gnuplot code.
+This function is called by `org-babel-execute-src-block'."
+  (require 'gnuplot)
+  (let ((session (cdr (assq :session params)))
+        (result-type (cdr (assq :results params)))
+        (body (org-babel-expand-body:gnuplot body params))
+	      output)
+    (save-window-excursion
+      ;; evaluate the code body with gnuplot
+      (if (string= session "none")
+          (let ((script-file (org-babel-temp-file "gnuplot-script-")))
+            (with-temp-file script-file
+              (insert (concat body "\n")))
+            (message "gnuplot \"%s\"" script-file)
+            (setq output                                       ; (ref:output 1)
+                  (shell-command-to-string
+		               (format
+		                "gnuplot \"%s\""
+		                (org-babel-process-file-name
+		                 script-file
+		                 (if (member system-type '(cygwin windows-nt ms-dos))
+			                   t nil)))))
+            (message "%s" output))
+        (with-temp-buffer
+          (insert (concat body "\n"))
+          (gnuplot-mode)
+          (gnuplot-send-buffer-to-gnuplot)))
+      (if (member "output" (split-string result-type))
+          output                                               ; (ref:output 2)
+	      nil)))) ;; signal that output has already been written to file
+#+end_src
+
+- [[(output 1)]]
+- [[(output 2)]]
+
+**** exporting Racket images (Org-mode Mailing List)
+
+I'm using a nice package from a Racket user called "MetaPict", however, I don't
+know how to export the image produced. Here's some Racket code calling MetaPict:
+
+#+begin_src scheme :session mainsession :exports both
+(require racket/draw metapict metapict/graph)
+         
+(set-curve-pict-size 300 300)  ; width and height of image
+(ahlength  1.0)                ; size of arrow head 
+
+(define (f x) (sin x))
+
+(define p
+  (with-window (window -12 12 -12 12)             ; xmin, xmax, ymin, ymax
+    (draw (draw-arrow (curve (pt -10   0) -- (pt 10  0)))  ; x-axis
+          (draw-arrow (curve (pt   0 -10) -- (pt  0 10)))  ; y-axis
+          (label-rt  "x" (pt 10.2 0))                      ; label for x axis
+          (label-top "y" (pt 0 10.2))                      ; label for y axis
+          (color "blue" (draw (circle (pt 2 1) 3)))        ; center (2,1) radius 3
+          (color "red"  (draw (graph f -10 10 #:samples 50))))))
+
+(define (save-pict-as-svg p width height filename [exists 'replace])
+  (define dc (new svg-dc%
+                  [width width]
+                  [height height]
+                  [output filename]
+                  [exists exists]))
+  (send dc start-doc "An SVG Test")  ; a message
+  (send dc start-page)
+  (draw-pict p dc 0 0)
+  (send dc end-page)
+  (send dc end-doc))
+  
+(save-pict-as-svg p 300 300 "images/outtestmetapict1.svg")
+#+end_src
+
+No surprise, but orgmode doesn't know that the image output.
+
+#+begin_src scheme :eval no
+(save-pict-as-svg p 300 300 "images/outtestmetapict1.svg")
+#+end_src
+
+Should be the code block's results. And adding ~#+RESULTS:~ over a hand-added
+[[file:images/outtestmetapict1.svg]] link makes it not display. I'm guessing this
+means orgmode does things internally with, say, gnuplot to make the generated
+image the results and obey the ~:exports both~ . . . Any ideas how I can get this
+gnuplot-like behavior with Racket MetaPict? I'm guessing a customization of the
+underlying babel code is necessary. . . .
+
+*** DONE code
+CLOSED: [2018-02-14 Wed 17:44]
+:LOGBOOK:
+- State "DONE"       from              [2018-02-14 Wed 17:44]
+:END:
+
+**** DONE [#A] use org-babel :post header argument with noweb reference to print a inline image link
+CLOSED: [2018-02-14 Wed 17:44] DEADLINE: <2018-01-16 Tue>
+:LOGBOOK:
+- State "DONE"       from              [2018-02-14 Wed 17:44]
+:END:
+
+***** :post [1/3]
+
+- [[file:~/Org/Wiki/Computer%20Technology/Programming/Emacs/modes/Org-mode/Org-mode.org::#:post%20header%20argument][:post]] :: 
+
+- [X] wrap image path with inline image link:
+
+   #+NAME: ob-clojure-literate-inline-image-wrapper
+   #+begin_src emacs-lisp :results raw
+   (prin1 (format "[[file:%s]]" "hello.jpg"))
+   #+end_src
+
+   #+RESULTS: ob-clojure-literate-inline-image-wrapper
+   [[file:hello.jpg]]
+
+- [ ] ob-clojure-literate lob ingest the upper snippet:
 
    #+begin_src emacs-lisp
-   (ob-clojure-literate-mode 1)
+   ;;; automatically ingest "Library of Babel".
+   ;; TODO: how to auto get current package path?
+   (org-babel-lob-ingest (concat user-emacs-directory "Org-mode/Library of Babel/Library of Babel.org"))
    #+end_src
 
-2. define a variable in CIDER REPL.
+- [ ] add this ~:post ob-clojure-literate-inline-image-wrapper(*this*)~ header argument to default list.
 
-   Go to CIDER REPL then type in src_clojure{(def my-name "stardiviner")} 
+  #+begin_src emacs-lisp
+  (if (eq 'image (org-babel--get-vars :results))
+      (add-to-list 'org-babel-default-header-args:clojure
+                   '(:post "ob-clojure-literate-inline-image-wrapper(*this*)")))
+  #+end_src
 
-3. print the value defined in CIDER REPL.
+***** :prologue + :epilogue [1/3]
 
-   #+begin_src clojure
-   (prn my-name)
-   #+end_src
+- [[file:~/Org/Wiki/Computer%20Technology/Programming/Emacs/modes/Org-mode/Org-mode.org::#:prologue%20header%20argument][:prologue]] :: Text to prepend to code block body.
+- [[file:~/Org/Wiki/Computer%20Technology/Programming/Emacs/modes/Org-mode/Org-mode.org::#:epilogue%20header%20argument][:epilogue]] :: Text to append to code block body.
 
-   #+RESULTS:
-   : "stardiviner"
+- [X] define inline image variable at beginning
 
-   The result should be "~stardiviner~".
+  #+NAME: ob-clojure-literate--def-inline-image-var
+  #+begin_src clojure
+  (def ob-clojure-literate-inline-image)
+  #+end_src
 
-4. Then disable ~ob-clojure-literate-mode~.
+  #+begin_src emacs-lisp
+  (add-to-list 'org-babel-default-header-args:clojure
+               '(:prologue . "ob-clojure-literate--def-inline-image-var"))
+  #+end_src
 
-   #+begin_src emacs-lisp
-   (ob-clojure-literate-mode -1)
-   #+end_src
+- [ ] assign image data to pre-defined inline image variable
 
-   #+RESULTS:
+  #+begin_src clojure
+  (def ob-clojure-literate-inline-image <IMAGE DATE>)
+  #+end_src
 
-5. Then try to print that variable again.
+- [ ] print an inline image link format result
 
-   #+begin_src clojure
-   (prn my-name)
-   #+end_src
+  #+begin_src emacs-lisp
+  (prin1 (format "[[file:%s]]" "hello.jpg"))
+  #+end_src
 
-** initiate session
+**** DONE save image to path in Clojure side instead of Emacs Org-mode side [1/1]
+CLOSED: [2018-02-14 Wed 17:43]
+:LOGBOOK:
+- State "DONE"       from              [2018-02-14 Wed 17:43]
+:END:
 
-1. make sure you don't have following session initiated yet.
+- [X] https://gist.github.com/jkk/3959731
+     
+**** DONE try to add an advice on ~org-babel-execute:clojure~
+CLOSED: [2018-02-14 Wed 17:43]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2018-02-14 Wed 17:43]
+- State "TODO"       from              [2017-12-21 Thu 18:43]
+:END:
 
-   #+begin_src clojure :session "*cider-repl ob-clojure*" :var name="stardiviner"
-   (prn "hello, " name)
-   #+end_src
+**** DONE get path
+CLOSED: [2018-02-14 Wed 17:43]
+:LOGBOOK:
+- State "DONE"       from              [2018-02-14 Wed 17:43]
+:END:
 
-2. Put your point on upper src block then initiate session with =[C-c C-v z]=.
+#+begin_src emacs-lisp
+(and (buffer-file-name) (file-name-directory (buffer-file-name)))
+#+end_src
+
+**** DONE let Clojure/CIDER support to pipe Clojure image data to Emacs Org-mode :result
+CLOSED: [2018-02-14 Wed 17:43]
+     :LOGBOOK:
+     - State "DONE"       from "FEATURE"    [2018-02-14 Wed 17:43]
+     - State "FEATURE"    from              [2017-06-29 Thu 00:05]
+     :END:
+
+ - [ ] dive into Org-mode source code of ~:results graphics file~, ~:file~ etc.
+ - [ ] create a Clojure package.
+
+**** DONE try to output image to =stdout= instead of a file
+CLOSED: [2018-02-14 Wed 17:43]
+:LOGBOOK:
+- State "DONE"       from              [2018-02-14 Wed 17:43]
+:END:
+
+ #+begin_src clojure :session :results file :dir "data/images" :file "clojure-babel-figure-result.png"
+ (use '(incanter core stats charts io))
+
+ (def my-plot (function-plot sin -10 10))
+
+ my-plot
+ #+end_src
+
+ #+RESULTS:
+
+ - [-] ask, how to generate image output to stdout.
+   - [X] Slack
+   - [ ] response
+
+**** move the result plot image to specified :dir path.
+
+#+begin_src emacs-lisp
+(move-file )
+#+end_src
+
+**** DONE or return the file name
+CLOSED: [2018-02-14 Wed 17:42]
+:LOGBOOK:
+- State "DONE"       from              [2018-02-14 Wed 17:42]
+:END:
+
+ #+begin_src clojure :session :results file :dir "data/images" :var fname="clojure-babel-figure-result.png"
+ (use '(incanter core stats charts io))
+
+ (def my-plot (function-plot sin -10 10))
+
+ (save my-plot "clojure-babel-figure-result.png")
+
+ my-plot
+ #+end_src
+
+*** DONE test examples
+CLOSED: [2018-02-14 Wed 17:44]
+:LOGBOOK:
+- State "DONE"       from              [2018-02-14 Wed 17:44]
+:END:
+
+[[file:~/Code/learning/Emacs/Org-mode/ob-clojure.org::*Inline%20Plot][Inline Plot]]
+
+[[file:~/Org/Wiki/Computer%20Technology/Programming/Emacs/modes/Org-mode/Org-mode.org::#ob-clojure%20inline%20plot%20image][inline plot image]]
+
+[[file:~/Org/Wiki/Computer/Programming/Programming%20Languages/Python/Data/Packages/qrcode.org::*workflow][Python QR code workflow]]
+
+** DONE How to return image path link for inline image display? [2/2]
+CLOSED: [2018-02-14 Wed 17:41] DEADLINE: <2018-02-14 Wed>
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2018-02-14 Wed 17:41]
+- State "TODO"       from              [2018-02-14 Wed 12:32]
+:END:
+
+- [X] Maybe ~:results file :file "plot.png"~ already can make result to an inline image?
+
+  #+begin_src clojure :results file :file "incanter-plot.png"
+  (use '(incanter core stats datasets charts io pdf))
+
+  (def my-chart (histogram (sample-normal 1000)))
+  (save my-chart "incanter-plot.png")
+  #+end_src
+
+  #+RESULTS[<2018-02-14 17:36:17> 259a23f3d1bce7bd409a4d556bdc2c6308154b60]:
+  [[file:incanter-plot.png]]
+
+- [X] reference ob-gnuplot
+
+** DONE [#A] insert result file link with relative path instead of absolute path [/]
+CLOSED: [2018-03-06 Tue 15:13] DEADLINE: <2018-03-06 Tue>
+:PROPERTIES:
+:Source_Code: https://code.orgmode.org/bzg/org-mode/commit/f7b120e566fb85f37c300a7ae151eb81b6740eaf
+:END:
+:LOGBOOK:
+- State "DONE"       from "STARTED"    [2018-03-06 Tue 15:13]
+- State "STARTED"    from "DONE"       [2018-03-06 Tue 15:13]
+- State "DONE"       from "STARTED"    [2018-03-06 Tue 14:45]
+- State "STARTED"    from "TODO"       [2018-03-06 Tue 14:10]
+CLOCK: [2018-03-06 Tue 14:10]--[2018-03-06 Tue 14:45] =>  0:35
+- State "TODO"       from              [2018-03-06 Tue 14:09]
+:END:
+
+** DONE let ob-core.el handle :results graphics case [3/3]
+CLOSED: [2018-03-06 Tue 14:48] SCHEDULED: <2018-03-02 Fri>
+:LOGBOOK:
+- State "DONE"       from "Pull-Request" [2018-03-06 Tue 14:48]
+- State "Pull-Request" from "TODO"       [2018-03-02 Fri 14:06]
+- State "TODO"       from              [2018-03-02 Fri 14:06]
+:END:
+
+- [X] send PR after previous PR merged
+- [X] https://code.orgmode.org/bzg/org-mode/compare/master...stardiviner:develop
+- [X] PR message: As this post described. https://emacs.stackexchange.com/questions/38857/org-babel-executeclojure-handle-file-result-error
+
+** STARTED let org-babel-edit-src special buffer connect to correct CIDER REPL to get completion [0/4]
+SCHEDULED: <2018-03-02 Fri>
+:LOGBOOK:
+- State "STARTED"    from "TODO"       [2018-03-02 Fri 13:40]
+CLOCK: [2018-03-02 Fri 13:40]--[2018-03-02 Fri 14:10] =>  0:30
+- State "TODO"       from              [2018-01-07 Sun 11:10]
+:END:
+
+If I have multiple CIDER REPL connections, how do I know current Clojure buffer
+is using which CIDER REPL session?
+
+- [ ] ~setq-local~ to specify buffer local CIDER connection session.
+- [ ] read from header argument ~:session~
+- [ ] ask
+  - [ ] Slack
+
+*** test
+
+#+begin_src clojure
+
+#+end_src
+
+** FEATURE ob-clojure.el babel async executing :async [4/4]
+    :LOGBOOK:
+    - State "FEATURE"    from              [2017-06-22 Thu 14:38]
+    :END:
+
+ - [X] try ob-async
+   - [X] does not work
+ - [X] async ob-clojure
+   - [X] http://fgiasson.com/blog/index.php/2016/04/05/using-clojure-in-org-mode-and-implementing-asynchronous-processing/
+
+*** source code
+
+ - [ ] might need to improve this source code
+
+This source code is written by others:
+
+#+begin_src emacs-lisp
+(defun org-babel-execute:clojure (body params)
+  "Execute a block of Clojure code with Babel."
+  (lexical-let* ((expanded (org-babel-expand-body:clojure body params))
+                                        ; name of the buffer that will receive the asyn output
+                 (sbuffer "*Clojure Sub Buffer*")
+                                        ; determine if the :async option is specified for this block
+                 (async (if (assoc :async params) t nil))
+                                        ; generate the full response from the REPL
+                 (response (cons 'dict nil))
+                                        ; keep track of the status of the output in async mode
+                 status
+                                        ; result to return to Babel
+                 result)
+    (case org-babel-clojure-backend
+      (cider
+       (require 'cider)
+       (let ((result-params (cdr (assoc :result-params params))))
+                                        ; Check if the user want to run code asynchronously
+         (when async
+                                        ; Create a new window with the async output buffer
+           (switch-to-buffer-other-window sbuffer)
+
+                                        ; Run the Clojure code asynchronously in nREPL
+           (nrepl-request:eval
+            expanded 
+            (lambda (resp) 
+              (when (member "out" resp)
+                                        ; Print the output of the nREPL in the asyn output buffer
+                (princ (nrepl-dict-get resp "out") (get-buffer sbuffer)))
+              (nrepl--merge response resp)
+                                        ; Update the status of the nREPL output session
+              (setq status (nrepl-dict-get response "status")))
+            (cider-current-connection) 
+            (cider-current-session))
+
+                                        ; Wait until the nREPL code finished to be processed
+           (while (not (member "done" status))
+             (nrepl-dict-put response "status" (remove "need-input" status))
+             (accept-process-output nil 0.01)
+             (redisplay))
+
+                                        ; Delete the async buffer & window when the processing is finalized
+           (let ((wins (get-buffer-window-list sbuffer nil t)))
+             (dolist (win wins)
+               (delete-window win))
+             (kill-buffer sbuffer))
+
+                                        ; Put the output or the value in the result section of the code block
+           (setq result (nrepl-dict-get response 
+                                        (if (or (member "output" result-params)
+                                                (member "pp" result-params))
+                                            "out"
+                                          "value"))))
+                                        ; Check if user want to run code synchronously
+         (when (not async)
+           (setq result
+                 (nrepl-dict-get
+                  (let ((nrepl-sync-request-timeout 
+                         org-babel-clojure-nrepl-timeout))
+                    (nrepl-sync-request:eval
+                     expanded (cider-current-connection) (cider-current-session)))
+                  (if (or (member "output" result-params)
+                          (member "pp" result-params))
+                      "out"
+                    "value"))))))
+      (slime
+       (require 'slime)
+       (with-temp-buffer
+         (insert expanded)
+         (setq result
+               (slime-eval
+                `(swank:eval-and-grab-output
+                  ,(buffer-substring-no-properties (point-min) (point-max)))
+                (cdr (assoc :package params)))))))
+    (org-babel-result-cond (cdr (assoc :result-params params))
+      result
+      (condition-case nil (org-babel-script-escape result)
+        (error result)))))
+#+end_src
+
+*** test
+
+ #+begin_src clojure :async
+ (dotimes [n 10]
+   (println n ".")
+   (Thread/sleep 500))
+ #+end_src
+
+ #+RESULTS:
+
+** TODO remove ob-clojure project [0/1]
+:LOGBOOK:
+- State "TODO"       from              [2018-01-31 Wed 20:41]
+:END:
+
+Because orchard make ~CIDER~ possible to use ~clj~ instead of ~lein~ when /running
+CIDER without a project/.
+
+- [ ] update ob-clojure-literate source code.
+
+
+
+
+
+* STARTED ob-clojure-literate [23/26]
+:LOGBOOK:
+- Removed deadline, was "[2018-02-13 Tue]" on [2018-03-07 Wed 02:42]
+- Not scheduled, was "[2017-12-18 Mon]" on [2018-02-13 Tue 01:43]
+CLOCK: [2018-01-03 Wed 15:38]--[2018-01-03 Wed 16:47] =>  1:09
+CLOCK: [2017-12-25 Mon 18:31]--[2017-12-25 Mon 19:05] =>  0:34
+CLOCK: [2017-12-24 Sun 08:19]--[2017-12-24 Sun 08:49] =>  0:30
+CLOCK: [2017-12-23 Sat 13:49]--[2017-12-24 Sun 08:05] => 18:16
+CLOCK: [2017-12-22 Fri 10:35]--[2017-12-22 Fri 10:40] =>  0:05
+- State "STARTED"    from "CODE"       [2017-12-22 Fri 08:57]
+CLOCK: [2017-12-22 Fri 08:57]--[2017-12-22 Fri 09:57] =>  1:00
+- State "CODE"       from              [2017-12-22 Fri 08:56]
+:END:
+
+** DONE publish ob-clojure-literate [7/8]
+CLOSED: [2018-01-04 Thu 17:44]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2018-01-04 Thu 17:44]
+- State "TODO"       from              [2018-01-04 Thu 13:50]
+:END:
+
+I created a package ob-clojure-literate.el for Clojure Literate Programming in
+Emacs Org-mode. https://github.com/stardiviner/ob-clojure-literate . Welcome
+Emacs user use and test it. And I still have two features not implemented. Hope
+someone will PR. Thanks very much.
+
+- [X] Twitter
+  - [X] follow their twitters
+- [X] Org-mode ML
+- [X] Clojure ML
+- [X] MELPA
+- [X] [[https://mail.google.com/mail/u/0/#label/(A)+Me+in+ML/160c0852a2a8416a][Gmail link]]
+- [X] Slack
+- [ ] Reddit
+
+** DONE publish package [10/10]
+CLOSED: [2018-01-01 Mon 15:12]
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2018-01-01 Mon 15:12]
+- State "TODO"       from              [2017-12-28 Thu 13:39]
+:END:
+
+- [X] create repo
+- [X] add README
+- [X] add source code one small commit by one
+- [X] add MELPA recipe https://github.com/melpa/melpa/pull/5206
+  - [X] shorten the recipe name
+  - [X] rename in source code
+  - [X] rename MELPA recipe
+  - [X] add MELPA recipe PR https://github.com/melpa/melpa/pull/5209
+- [X] add issue for "help wanted"
+
+#+NAME: MELPA recipe
+#+begin_src emacs-lisp :tangle "~/Code/Emacs/melpa/recipes/ob-clojure-literate"
+(ob-clojure-literate
+  :fetcher github
+  :repo "stardiviner/ob-clojure-literate")
+#+end_src
+
+- [X] add useful keybinding definitions
+
+#+begin_src emacs-lisp
+(define-key ob-clojure-literate-mode-map (kbd "C-x C-e") 'cider-eval-last-sexp)
+(define-key ob-clojure-literate-mode-map (kbd "C-c C-d") 'cider-doc)
+#+end_src
 
 
 * Theory
-
-** This package workflow
 
 *** auto start an CIDER REPL for ob-clojure
 
@@ -243,3 +1342,55 @@ So I decide to solve this problem in my way.
        (defvar ob-clojure-cider-repl-ns cider-buffer-ns)
        (setq-local cider-buffer-ns ob-clojure-cider-repl-ns)))
    #+end_src
+
+
+* Test
+
+** use default session
+
+1. Enable ~ob-clojure-literate-mode~.
+
+   #+begin_src emacs-lisp
+   (ob-clojure-literate-mode 1)
+   #+end_src
+
+2. define a variable in CIDER REPL.
+
+   Go to CIDER REPL then type in src_clojure{(def my-name "stardiviner")} 
+
+3. print the value defined in CIDER REPL.
+
+   #+begin_src clojure
+   (prn my-name)
+   #+end_src
+
+   #+RESULTS:
+   : "stardiviner"
+
+   The result should be "~stardiviner~".
+
+4. Then disable ~ob-clojure-literate-mode~.
+
+   #+begin_src emacs-lisp
+   (ob-clojure-literate-mode -1)
+   #+end_src
+
+   #+RESULTS:
+
+5. Then try to print that variable again.
+
+   #+begin_src clojure
+   (prn my-name)
+   #+end_src
+
+** initiate session
+
+1. make sure you don't have following session initiated yet.
+
+   #+begin_src clojure :session "*cider-repl ob-clojure*" :var name="stardiviner"
+   (prn "hello, " name)
+   #+end_src
+
+2. Put your point on upper src block then initiate session with =[C-c C-v z]=.
+
+
