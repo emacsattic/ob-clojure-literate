@@ -1,5 +1,10 @@
 #+TITLE: ob-clojure-literate
 
+* deprecated
+
+ob-clojure-literate is in Org-mode contrib lib now.
+https://code.orgmode.org/bzg/org-mode/src/master/contrib/lisp/ob-clojure-literate.el
+
 * Features
 
 ** use default session
