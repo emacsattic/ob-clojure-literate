@@ -1,9 +1,14 @@
 #+TITLE: ob-clojure-literate
 
-* deprecated
+* DEPRECATED
 
 ob-clojure-literate is in Org-mode contrib lib now.
+
 https://code.orgmode.org/bzg/org-mode/src/master/contrib/lisp/ob-clojure-literate.el
+
+If you want to know more about `ob-clojure-literate` and `ob-clojure`
+difference, check out this [[https://github.com/stardiviner/ob-clojure-literate/issues/4][issue #4 discussion]]. And you also can check out
+`ob-clojure.el` file source code Git log to know more.
 
 * Features
 

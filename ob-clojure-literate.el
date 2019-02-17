@@ -133,6 +133,12 @@ Don't auto jack in by default for not rude."
     ;; store/restore emptied CIDER connections by `ob-clojure-literate-enable'.
     (kill-local-variable 'cider-connections) ; kill local variable so that I can get the original global variable value.
     ;; Empty all CIDER connections to avoid `cider-current-connection' return any connection.
+    ;; FIXME: when try to enable, `cider-connections' is local and nil.
+    ;; (if (and (= (length (ob-clojure-literate-get-session-list)) 1)
+    ;;          (-contains-p (ob-clojure-literate-get-session-list) ob-clojure-literate-default-session)))
+    ;; (unless (local-variable-if-set-p 'cider-connections)
+    ;;   (make-local-variable 'cider-connections))
+    ;; (setq-local cider-connections '())
     ))
 
 (defun ob-clojure-literate-cider-do-not-find-ns (body params)
