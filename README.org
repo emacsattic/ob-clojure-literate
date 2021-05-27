@@ -1,15 +1,5 @@
 #+TITLE: ob-clojure-literate
 
-* DEPRECATED
-
-ob-clojure-literate is in Org-mode contrib lib now.
-
-https://code.orgmode.org/bzg/org-mode/src/master/contrib/lisp/ob-clojure-literate.el
-
-If you want to know more about `ob-clojure-literate` and `ob-clojure`
-difference, check out this [[https://github.com/stardiviner/ob-clojure-literate/issues/4][issue #4 discussion]]. And you also can check out
-`ob-clojure.el` file source code Git log to know more.
-
 * Features
 
 ** use default session
@@ -61,7 +51,6 @@ It will great if ~ob-clojure.el~ want to merge this code.
 - State "TODO"       from              [2018-01-07 Sun 11:10]
 :END:
 
-
 * Installation
 
 ** use-package
@@ -76,7 +65,6 @@ It will great if ~ob-clojure.el~ want to merge this code.
   )
 #+end_src
 
-
 * Motivation
 
 I like Emacs Org-mode "Literate Programming" very much. It's a kind of paradigm.
@@ -87,7 +75,6 @@ Literate Programming very much like other language babel (like Python) supports.
 _This README is totally written in Org-mode Literate Programming._
 
 So I decide to solve this problem in my way.
-
 
 * Usage
 
@@ -1179,7 +1166,6 @@ CIDER without a project/.
 
 
 
-
 * STARTED ob-clojure-literate [23/26]
 :LOGBOOK:
 - Removed deadline, was "[2018-02-13 Tue]" on [2018-03-07 Wed 02:42]
@@ -1245,7 +1231,6 @@ CLOSED: [2018-01-01 Mon 15:12]
 (define-key ob-clojure-literate-mode-map (kbd "C-x C-e") 'cider-eval-last-sexp)
 (define-key ob-clojure-literate-mode-map (kbd "C-c C-d") 'cider-doc)
 #+end_src
-
 
 * Theory
 
@@ -1352,7 +1337,6 @@ CLOSED: [2018-01-01 Mon 15:12]
        (defvar ob-clojure-cider-repl-ns cider-buffer-ns)
        (setq-local cider-buffer-ns ob-clojure-cider-repl-ns)))
    #+end_src
-
 
 * Test
 

@@ -20,8 +20,7 @@
 ;;; Code:
 
 (require 'ob-clojure)
-(require 'cider)
-(require 'dash)
+(require 'cider nil t)
 
 (defgroup ob-clojure-literate nil
   "Clojure's Org-mode Literate Programming."
@@ -35,8 +34,10 @@ Don't auto jack in by default for not rude."
   :type 'boolean
   :group 'ob-clojure-literate)
 
-(defcustom ob-clojure-literate-project-location (concat user-emacs-directory "Org-mode/")
-  "The location for `ob-clojure-literate' scaffold project."
+(defcustom ob-clojure-literate-project-location nil
+  "The location for `ob-clojure-literate' scaffold project.
+If it is nil, then `cider-jack-in' will jack-in outside of Clojure project.
+If it is a directory, `ob-clojure-literate' will try to create Clojure project automatically."
   :type 'string
   :group 'ob-clojure-literate)
 
@@ -45,7 +46,7 @@ Don't auto jack in by default for not rude."
 (defvar ob-clojure-literate-session-ns nil)
 (defvar ob-clojure-literate-cider-connections nil)
 
-(defcustom ob-clojure-literate-default-session "*cider-repl ob-clojure*"
+(defcustom ob-clojure-literate-default-session "*cider-repl localhost*"
   "The default session name for `ob-clojure-literate'."
   :type 'string
   :group 'ob-clojure-literate)
@@ -61,13 +62,17 @@ Don't auto jack in by default for not rude."
 
 (defun ob-clojure-literate-get-session-list ()
   "Return a list of available started CIDER REPL sessions list."
-  (-map 'buffer-name cider-connections))
+  (mapcar #'buffer-name
+	      ;; for multiple connections case.
+	      ;; get global value instead of buffer local.
+	      (default-value 'cider-connections)))
 
+;;; Do not allow "ob-clojure" project session name.
 (defun ob-clojure-literate-set-session ()
   "Set session name for buffer local."
   ;; if default session is the only one in connections list.
   (if (and (= (length (ob-clojure-literate-get-session-list)) 1)
-           (-contains-p (ob-clojure-literate-get-session-list) ob-clojure-literate-default-session))
+           (member ob-clojure-literate-default-session (ob-clojure-literate-get-session-list)))
       (setq-local ob-clojure-literate-session ob-clojure-literate-default-session)
     ;; if have any connections, choose one from them.
     (if (ob-clojure-literate-any-connection-p)
@@ -76,11 +81,11 @@ Don't auto jack in by default for not rude."
                                      (ob-clojure-literate-get-session-list)))
       ;; if none, set to default session name to fix `ob-clojure-literate-mode'
       ;; is enabled before `cider-jack-in' generated connections.
-      (setq-local ob-clojure-literate-session ob-clojure-literate-default-session))
-    ))
+      (setq-local ob-clojure-literate-session
+		          ob-clojure-literate-default-session))))
 
 ;;;###autoload
-(defun ob-clojure-literate-specify-session-header-argument ()
+(defun ob-clojure-literate-specify-session ()
   "Specify ob-clojure header argument :session with value selected from a list of available sessions."
   (interactive)
   (let ((lang (nth 0 (org-babel-get-src-block-info))))
@@ -104,23 +109,30 @@ Don't auto jack in by default for not rude."
 (defun ob-clojure-literate-auto-jackin ()
   "Auto setup ob-clojure-literate scaffold and jack-in Clojure project."
   (interactive)
-  (unless (file-directory-p (expand-file-name ob-clojure-literate-project-location))
-    (make-directory ob-clojure-literate-project-location t)
-    (let ((default-directory ob-clojure-literate-project-location))
-      (shell-command "lein new ob-clojure")))
-  (unless (or
-           (and (cider-connected-p)
-                (if (not (null ob-clojure-literate-session))
-                    (seq-contains cider-connections (get-buffer ob-clojure-literate-session))))
-           cider-connections
-           (not (null ob-clojure-literate-session)))
-    ;; return back to original file.
-    (if (not (and (= (length (ob-clojure-literate-get-session-list)) 1)
-                  (-contains-p (ob-clojure-literate-get-session-list) ob-clojure-literate-default-session)))
-        (save-window-excursion
-          (find-file (expand-file-name (concat ob-clojure-literate-project-location "ob-clojure/src/ob_clojure/core.clj")))
-          (with-current-buffer "core.clj"
-            (cider-jack-in))))))
+  (cond
+   ;; jack-in outside of Clojure project.
+   ((null ob-clojure-literate-project-location)
+    (if (member (get-buffer "*cider-repl localhost*") cider-connections)
+	    (message "CIDER default session already launched.")
+      (cider-jack-in nil)))
+   ((not (null ob-clojure-literate-project-location))
+    (unless (file-directory-p (expand-file-name ob-clojure-literate-project-location))
+      (make-directory ob-clojure-literate-project-location t)
+      (let ((default-directory ob-clojure-literate-project-location))
+	    (shell-command "lein new ob-clojure")))
+    (unless (or
+             (and (cider-connected-p)
+                  (if (not (null ob-clojure-literate-session))
+		              (seq-contains cider-connections (get-buffer ob-clojure-literate-session))))
+             cider-connections
+	         (ob-clojure-literate-any-connection-p))
+      ;; return back to original file.
+      (if (not (and (= (length (ob-clojure-literate-get-session-list)) 1)
+                    (member ob-clojure-literate-default-session (ob-clojure-literate-get-session-list))))
+          (save-window-excursion
+            (find-file (expand-file-name (concat ob-clojure-literate-project-location "ob-clojure/src/ob_clojure/core.clj")))
+            (with-current-buffer "core.clj"
+	          (cider-jack-in))))))))
 
 (defun ob-clojure-literate-set-local-cider-connections (toggle?)
   "Set buffer local `cider-connections' for `ob-clojure-literate-mode' `TOGGLE?'."
@@ -135,20 +147,21 @@ Don't auto jack in by default for not rude."
     ;; Empty all CIDER connections to avoid `cider-current-connection' return any connection.
     ;; FIXME: when try to enable, `cider-connections' is local and nil.
     ;; (if (and (= (length (ob-clojure-literate-get-session-list)) 1)
-    ;;          (-contains-p (ob-clojure-literate-get-session-list) ob-clojure-literate-default-session)))
+    ;;          (member ob-clojure-literate-default-session (ob-clojure-literate-get-session-list))))
     ;; (unless (local-variable-if-set-p 'cider-connections)
     ;;   (make-local-variable 'cider-connections))
     ;; (setq-local cider-connections '())
     ))
 
-(defun ob-clojure-literate-cider-do-not-find-ns (body params)
+(defun ob-clojure-literate-set-ns (body params)
   "Fix the issue that `cider-current-ns' try to invoke `clojure-find-ns' to extract ns from buffer."
   ;; TODO: Is it possible to find ns in `body'?
   (when (ob-clojure-literate-any-connection-p)
     (setq ob-clojure-literate-original-ns (cider-current-ns))
     (with-current-buffer ob-clojure-literate-session
       (setq ob-clojure-literate-session-ns cider-buffer-ns))
-    (setq-local cider-buffer-ns ob-clojure-literate-session-ns))
+    (setq-local cider-buffer-ns (or (cdr (assq :ns params))
+				                    ob-clojure-literate-session-ns)))
   (message (format "ob-clojure-literate: current CIDER ns is [%s]." cider-buffer-ns)))
 
 (defun ob-clojure-literate-set-local-session (toggle?)
@@ -169,70 +182,68 @@ Don't auto jack in by default for not rude."
           (delq t
                 (mapcar
                  (lambda (cons) (if (eq (car cons) :session) t cons))
-                 org-babel-default-header-args:clojure)))
+                 org-babel-default-header-args:clojure)))))
+
+
+;;; Support header arguments  :results graphics :file "image.png" by inject Clojure code.
+(defun ob-clojure-literate-inject-code (args)
+  "Inject Clojure code into `BODY' in `ARGS'.
+It is used to change Clojure currently working directory in a FAKE way.
+And generate inline graphics image file link result.
+Use header argument like this:
+
+:results graphics :file \"incanter-plot.png\"
+
+Then you need to assign image variable to this :file value like:
+(def incanter-plot (histogram (sample-normal 1000)))
+
+*NOTE*: Currently only support Incanter's `save' function.
+"
+  (let* ((body (nth 0 args))
+         (params (nth 1 args))
+	     (dir (cdr (assq :dir params)))
+	     (default-directory (and (buffer-file-name) (file-name-directory (buffer-file-name))))
+         (directory (and dir (file-name-as-directory (expand-file-name dir))))
+	     (result-type (cdr (assq :results params)))
+	     (file (cdr (assq :file params)))
+	     (file-name (and file (file-name-base file)))
+	     ;; TODO: future support `:graphics-file' to avoid collision.
+	     (graphics-result (member "graphics" (cdr (assq :result-params params))))
+	     ;; (graphics-file (cdr (assq :graphics-file params)))
+	     ;; (graphics-name (file-name-base graphics-file))
+         (prepend-to-body (lambda (code)
+                            (setq body (concat code "\n" body))))
+	     (append-to-body (lambda (code)
+			               (setq body (concat body "\n" code "\n"))))
+         )
+    (when directory
+      (unless (file-directory-p (expand-file-name directory))
+	    (warn (format "Target directory %s does not exist, please create it." dir))))
+    (when file
+      (funcall append-to-body
+      	       (format "(save %s \"%s\")" file-name (concat directory file)))
+      )
+    (list body params) ; return modified argument list
     ))
 
-;;; Support `org-babel-initiate-session' / [C-c C-v z] to initialize Clojure session.
-
-(defun org-babel-clojure-initiate-session (&optional session _params)
-  "Initiate a session named SESSION according to PARAMS."
-  (when (and session (not (string= session "none")))
-    (save-window-excursion
-      (unless (org-babel-comint-buffer-livep session)
-        ;; CIDER jack-in to the Clojure project directory.
-        (cond
-         ((eq org-babel-clojure-backend 'cider)
-          (require 'cider)
-          (let ((session-buffer (save-window-excursion
-                                  (cider-jack-in t)
-                                  (current-buffer))))
-            (if (org-babel-comint-buffer-livep session-buffer)
-                (progn (sit-for .25) session-buffer))))
-         ((eq org-babel-clojure-backend 'slime)
-          (error "Session evaluation with SLIME is not supported"))
-         (t
-          (error "Session initiate failed")))
-        )
-      (get-buffer session)
-      )))
-
-(defun org-babel-prep-session:clojure (session params)
-  "Prepare SESSION according to the header arguments specified in PARAMS."
-  (let* ((session (org-babel-clojure-initiate-session session))
-         (var-lines (org-babel-variable-assignments:clojure params)))
-    (when session
-      (org-babel-comint-in-buffer session
-        (mapc (lambda (var)
-                (insert var) (comint-send-input nil t)
-		            (org-babel-comint-wait-for-output session)
-		            (sit-for .1) (goto-char (point-max))) var-lines)))
-    session))
-
-(defun org-babel-clojure-var-to-clojure (var)
-  "Convert src block's `VAR' to Clojure variable."
-  ;; TODO: reference `org-babel-python-var-to-python'
-  )
-
-(defun org-babel-variable-assignments:clojure (params)
-  "Return a list of Clojure statements assigning the block's variables in `PARAMS'."
-  (mapcar
-   (lambda (pair)
-     (format "(def %s %s)"
-             (car pair)
-             ;; (org-babel-clojure-var-to-clojure (cdr pair))
-             (cdr pair)))
-   (org-babel--get-vars params)))
+;;; support :results graphics :dir "data/image" :file "incanter-plot.png"
+(defun ob-clojure-literate-support-graphics-result (result)
+  "Support :results graphics :dir \"data/images\" :file \"incanter-plot.png\"
+reset `RESULT' to `nil'."
+  (let* ((params (nth 2 info))
+	     (graphics-result (member "graphics" (cdr (assq :result-params params)))))
+    (if graphics-result
+	    (setq result nil))
+    result))
 
 
 (defvar ob-clojure-literate-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key org-babel-map (kbd "M-s") 'ob-clojure-literate-specify-session-header-argument)
-    (define-key org-babel-map (kbd "M-j") 'ob-clojure-literate-auto-jackin)
     map)
   "Keymap for `ob-clojure-literate-mode'.")
 
-;; (define-key org-babel-map (kbd "M-s") 'ob-clojure-literate-specify-session-header-argument)
-;; (define-key org-babel-map (kbd "M-j") 'ob-clojure-literate-auto-jackin)
+(define-key org-babel-map (kbd "M-s") 'ob-clojure-literate-specify-session)
+(define-key org-babel-map (kbd "M-j") 'ob-clojure-literate-auto-jackin)
 ;; (define-key org-babel-map (kbd "M-e") 'cider-eval-last-sexp)
 ;; (define-key org-babel-map (kbd "M-d") 'cider-doc)
 
@@ -243,13 +254,17 @@ Don't auto jack in by default for not rude."
              (equal major-mode 'org-mode)) ; `ob-clojure-literate-mode' only works in `org-mode'.
     (ob-clojure-literate-set-local-cider-connections ob-clojure-literate-mode)
     (ob-clojure-literate-set-local-session ob-clojure-literate-mode)
-    (advice-add 'org-babel-execute:clojure :before #'ob-clojure-literate-cider-do-not-find-ns)
+    (advice-add 'org-babel-execute:clojure :before #'ob-clojure-literate-set-ns)
+    (advice-add 'org-babel-expand-body:clojure :filter-args #'ob-clojure-literate-inject-code)
+    (advice-add 'org-babel-execute:clojure :filter-return #'ob-clojure-literate-support-graphics-result)
     (message "ob-clojure-literate minor mode enabled.")))
 
 ;;;###autoload
 (defun ob-clojure-literate-disable ()
   "Disable Org-mode buffer locally for `ob-clojure-literate'."
-  (advice-remove 'org-babel-execute:clojure #'ob-clojure-literate-cider-do-not-find-ns)
+  (advice-remove 'org-babel-execute:clojure #'ob-clojure-literate-set-ns)
+  (advice-remove 'org-babel-expand-body:clojure #'ob-clojure-literate-inject-code)
+  (advice-remove 'org-babel-execute:clojure #'ob-clojure-literate-support-graphics-result)
   (setq-local cider-buffer-ns ob-clojure-literate-original-ns)
   (ob-clojure-literate-set-local-cider-connections ob-clojure-literate-mode)
   (ob-clojure-literate-set-local-session ob-clojure-literate-mode)
@@ -262,7 +277,7 @@ Don't auto jack in by default for not rude."
 (define-minor-mode ob-clojure-literate-mode
   "A minor mode to toggle `ob-clojure-literate'."
   :require 'ob-clojure-literate
-  :init-value t
+  :init-value nil
   :lighter " clj-lp"
   :group 'ob-clojure-literate
   :keymap ob-clojure-literate-mode-map
